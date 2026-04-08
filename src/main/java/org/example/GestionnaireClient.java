@@ -79,7 +79,10 @@ public class GestionnaireClient implements Runnable {
                     quitter();
                 } else {
                     // sinon on diffuse le message à tous les utilisateurs
-                    diffuserMessage(response.getData());
+                    byte[] donneesUtiles = new byte[response.getLength()];
+                    System.arraycopy(response.getData(), 0, donneesUtiles, 0, response.getLength());
+
+                    diffuserMessage(donneesUtiles);
                 }
             } catch (IOException e) {
                 System.out.println("[ERREUR] gestionnaire client a planté pour " + clientInfo.getPseudo() + " : " + e);
