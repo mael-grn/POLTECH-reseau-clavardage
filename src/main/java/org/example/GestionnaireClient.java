@@ -73,7 +73,7 @@ public class GestionnaireClient implements Runnable {
                 DatagramPacket response = new DatagramPacket(messageClient, messageClient.length);
                 socket.receive(response);
                 // conversion de la réponse au format string
-                String responseStringValue = new String(response.getData(), StandardCharsets.US_ASCII);
+                String responseStringValue = new String(response.getData(), 0, response.getLength());
                 if (responseStringValue.equalsIgnoreCase("exit")) {
                     // si la réponse vaut exit, on initie la procedure de fermeture de la session
                     quitter();

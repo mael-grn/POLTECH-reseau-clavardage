@@ -23,6 +23,7 @@ public  class ServeurChatUDP {
         clients = new ConcurrentHashMap<>();
         try {
             //Création du socket principal
+            System.out.println("[DÉMARRAGE] Bienvenue notre service de messagerie!\n[DÉMARRAGE] Initialisation de la connection...");
             socket = new DatagramSocket(9000);
             ecouterRequetesJoin();
         } catch (SocketException e) {
@@ -50,7 +51,7 @@ public  class ServeurChatUDP {
      * @return true si le pseudo peut être utilisé, false sinon
      */
     private static boolean verifierPseudo(String pseudo) {
-        return clients.containsKey(pseudo);
+        return !clients.containsKey(pseudo);
     }
 
     /**
@@ -63,18 +64,21 @@ public  class ServeurChatUDP {
                 // buffer d'écoute
                 byte[] buffer = new byte[126];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+                System.out.println("[INFO] Prêt à recevoir des requêtes.");
                 socket.receive(response);
                 // conversion de la réponse en string
-                String responseString = new String(response.getData(), StandardCharsets.US_ASCII);
+                String responseString = new String(response.getData(), 0, response.getLength());
                 if (responseString.startsWith("JOIN:") && responseString.length() > 5) {
                     // si la réponse a le bon format, on commence le processus de création d'utilisateur
                     String pseudo = responseString.substring(5);
+                    System.out.println("[INFO] requête de JOIN de la part de " + pseudo);
                     ClientInfo client = new ClientInfo(pseudo, response.getAddress(), response.getPort());
-                    if (!verifierPseudo(pseudo)) {
+                    if (verifierPseudo(pseudo)) {
                         // Si le pseudo est correct, ont créé le nouvel utilisateur
                         ajouterNouveauClient(client);
                     } else {
                         // Si le pseudo est incorrect, on notifie l'utilisateur
+                        System.out.println("[INFO] le pseudo " + pseudo + " est déjà utilisé. La connexion est refusée.");
                         envoyerMessage(("Pseudo déjà utilisé").getBytes(), client.getInetSocketAddress());
                     }
                 } else {
@@ -95,10 +99,13 @@ public  class ServeurChatUDP {
     private static void ajouterNouveauClient(ClientInfo nouveauClient) {
         try {
             DatagramSocket socketClient = new DatagramSocket();
-            envoyerMessage(("PORT:"+socketClient.getPort()).getBytes(), nouveauClient.getInetSocketAddress());
+            System.out.println("[INFO] le nouvel utilisateur " + nouveauClient.getPseudo() + " aura le port " + socketClient.getLocalPort());
+            envoyerMessage(("PORT:"+socketClient.getLocalPort()).getBytes(), nouveauClient.getInetSocketAddress());
             clients.put(nouveauClient.getPseudo(), nouveauClient);
             GestionnaireClient gestionnaireClient = new GestionnaireClient(nouveauClient, socketClient, clients);
-            gestionnaireClient.run();
+            Thread thread = new Thread(gestionnaireClient);
+            thread.start();
+            System.out.println("[INFO] le nouvel utilisateur " + nouveauClient.getPseudo() + " peut maintenant rejoindre le chat.");
         } catch (IOException e) {
             System.out.println("[ERREUR] impossible de créer un nouvel utilisateur pour " + nouveauClient.getPseudo() + " : " + e);
         }
