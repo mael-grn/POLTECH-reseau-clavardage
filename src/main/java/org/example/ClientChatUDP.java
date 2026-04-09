@@ -24,6 +24,8 @@ public class ClientChatUDP {
             String message = demanderMessage();
             if (message.equalsIgnoreCase("exit")) {
                 deconnexion();
+            } else if (message.startsWith("/")) {
+                envoyerMessage(message);
             } else {
                 envoyerMessage(pseudo + " : " + message);
             }
@@ -73,7 +75,13 @@ public class ClientChatUDP {
                     DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                     socket.receive(response);
                     String msg = new String(response.getData(), 0, response.getLength());
-                    System.out.println("\n" + msg);
+                    if (msg.equalsIgnoreCase("TIMEOUT")) {
+                        System.out.println("\nTIMEOUT");
+                        socket.close(); // On ferme le socket [cite: 71]
+                        System.exit(0);
+                    } else  {
+                        System.out.println("\n" + msg);
+                    }
                 } catch (IOException e) {
                     System.out.println("Une erreur s'est produite lors de l'écoute des messages : " + e);
                     throw new RuntimeException(e);

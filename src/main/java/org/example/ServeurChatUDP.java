@@ -21,14 +21,16 @@ public  class ServeurChatUDP {
 
     static void main() {
         clients = new ConcurrentHashMap<>();
-        NettoyeurClients tacheNettoyage = new NettoyeurClients(clients, socket);
-        Thread threadNettoyeur = new Thread(tacheNettoyage);
-        threadNettoyeur.setDaemon(true);
-        threadNettoyeur.start();
+
+
         try {
             //Création du socket principal
             System.out.println("[DÉMARRAGE] Bienvenue notre service de messagerie!\n[DÉMARRAGE] Initialisation de la connection...");
             socket = new DatagramSocket(9000);
+            NettoyeurClients tacheNettoyage = new NettoyeurClients(clients, socket);
+            Thread threadNettoyeur = new Thread(tacheNettoyage);
+            threadNettoyeur.setDaemon(true);
+            threadNettoyeur.start();
             ecouterRequetesJoin();
         } catch (SocketException e) {
             // Si on ne parvient pas à créer le socket, on arrête l'application
@@ -71,10 +73,10 @@ public  class ServeurChatUDP {
                 System.out.println("[INFO] Prêt à recevoir des requêtes.");
                 socket.receive(response);
                 // conversion de la réponse en string
-                String responseString = new String(response.getData(), 0, response.getLength());
+                String responseString = new String(response.getData(), 0, response.getLength()).trim();
                 if (responseString.startsWith("JOIN:") && responseString.length() > 5) {
                     // si la réponse a le bon format, on commence le processus de création d'utilisateur
-                    String pseudo = responseString.substring(5);
+                    String pseudo = responseString.substring(5).trim();
                     System.out.println("[INFO] requête de JOIN de la part de " + pseudo);
                     ClientInfo client = new ClientInfo(pseudo, response.getAddress(), response.getPort());
                     if (verifierPseudo(pseudo)) {
