@@ -72,11 +72,21 @@ public class GestionnaireClient implements Runnable {
                 byte[] messageClient = new byte[126];
                 DatagramPacket response = new DatagramPacket(messageClient, messageClient.length);
                 socket.receive(response);
+                clientInfo.actualiserActivite();
+                if (!clients.containsKey(clientInfo.getPseudo())) {
+                    socket.close();
+                    return;
+                }
                 // conversion de la réponse au format string
-                String responseStringValue = new String(response.getData(), 0, response.getLength());
+                String responseStringValue = new String(response.getData(), 0, response.getLength()).trim();
                 if (responseStringValue.equalsIgnoreCase("exit")) {
                     // si la réponse vaut exit, on initie la procedure de fermeture de la session
                     quitter();
+                } else if (responseStringValue.equalsIgnoreCase("/liste")) {
+                    System.out.println("[INFO] " + clientInfo.getPseudo() + " a demandé la liste des utilisateurs connectés.");
+                    envoyerListePseudos();
+                } else if (responseStringValue.startsWith("/mp ")) {
+                    gererMessagePrive(responseStringValue);
                 } else {
                     // sinon on diffuse le message à tous les utilisateurs
                     byte[] donneesUtiles = new byte[response.getLength()];
@@ -105,5 +115,36 @@ public class GestionnaireClient implements Runnable {
         clients.remove(clientInfo.getPseudo());
         // on ferme le socket
         socket.close();
+    }
+
+    private void envoyerListePseudos() throws IOException {
+        String liste = "Utilisateurs connectés : " + String.join(", ", clients.keySet());
+        byte[] buffer = liste.getBytes();
+        // On renvoie le message à l'adresse et au port stockés dans clientInfo
+        envoyerMessage(buffer, clientInfo.getInetSocketAddress());
+    }
+
+
+    private void gererMessagePrive(String message) throws IOException {
+        // Le format attendu est "/mp <pseudo> <message>"
+        String[] parties = message.split(" ", 3);
+        if (parties.length < 3) {
+            String erreur = "Format de message privé invalide. Utilisez : /mp <pseudo> <message>";
+            envoyerMessage(erreur.getBytes(), clientInfo.getInetSocketAddress());
+            return;
+        }
+        String pseudoDestinataire = parties[1];
+        String contenuMessage = parties[2];
+
+        ClientInfo destinataire = clients.get(pseudoDestinataire);
+        if (destinataire == null) {
+            String msgMPInconnu = "Utilisateur inconnu : " + pseudoDestinataire;
+            envoyerMessage(msgMPInconnu.getBytes(), clientInfo.getInetSocketAddress());
+            return;
+        } else {
+            String messagePrive = "[MP de " + clientInfo.getPseudo() + "] " + contenuMessage;
+            envoyerMessage(messagePrive.getBytes(), destinataire.getInetSocketAddress());
+        }
+
     }
 }

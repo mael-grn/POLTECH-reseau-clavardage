@@ -21,6 +21,10 @@ public  class ServeurChatUDP {
 
     static void main() {
         clients = new ConcurrentHashMap<>();
+        NettoyeurClients tacheNettoyage = new NettoyeurClients(clients, socket);
+        Thread threadNettoyeur = new Thread(tacheNettoyage);
+        threadNettoyeur.setDaemon(true);
+        threadNettoyeur.start();
         try {
             //Création du socket principal
             System.out.println("[DÉMARRAGE] Bienvenue notre service de messagerie!\n[DÉMARRAGE] Initialisation de la connection...");

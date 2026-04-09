@@ -7,11 +7,13 @@ public class ClientInfo {
     private String pseudo;
     private InetAddress adresseIp;
     private int port;
+    private long derniereActivite;
 
     public ClientInfo(String pseudo, InetAddress adresseIp, int port) {
         this.pseudo = pseudo;
         this.adresseIp = adresseIp;
         this.port = port;
+        this.derniereActivite = System.currentTimeMillis();
     }
 
     public InetAddress getAdresseIp() {
@@ -41,4 +43,6 @@ public class ClientInfo {
     public InetSocketAddress getInetSocketAddress() {
         return new InetSocketAddress(adresseIp, port);
     }
+    public long getDerniereActivite() { return derniereActivite; }
+    public void actualiserActivite() { this.derniereActivite = System.currentTimeMillis(); }
 }
