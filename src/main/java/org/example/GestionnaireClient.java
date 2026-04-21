@@ -133,14 +133,11 @@ public class GestionnaireClient implements Runnable {
             envoyerMessage(erreur.getBytes(), clientInfo.getInetSocketAddress());
             return;
         }
+
         String pseudoDestinataire = parties[1].trim();
         String contenuMessage = parties[2].trim();
-
+        // Retrouve les infos du clients
         ClientInfo destinataire = clients.get(pseudoDestinataire);
-        System.out.println(clients.get(pseudoDestinataire));
-        System.out.println(clients);
-        System.out.println(message);
-        System.out.println("Destinaire" + destinataire + " pour le pseudo " + pseudoDestinataire);
         if (destinataire == null) {
             String msgMPInconnu = "Utilisateur inconnu : " + pseudoDestinataire;
             envoyerMessage(msgMPInconnu.getBytes(), clientInfo.getInetSocketAddress());

@@ -34,9 +34,7 @@ public class NettoyeurClients implements Runnable {
                         // On le supprime de la liste
                         clients.remove(client.getPseudo());
 
-                        // IMPORTANT : Il faut quand même un moyen de fermer le socket dédié.
-                        // La meilleure façon est que le GestionnaireClient vérifie lui-même
-                        // si son pseudo est toujours dans la Map.
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
